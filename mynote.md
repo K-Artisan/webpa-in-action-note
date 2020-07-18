@@ -4,8 +4,10 @@
 
 ## 视频教程
 
-尚硅谷2020最新版Webpack5实战教程(从入门到精通)
-https://www.bilibili.com/video/BV1e7411j7T5?p=1
+- 尚硅谷2020最新版Webpack5实战教程(从入门到精通)
+  https://www.bilibili.com/video/BV1e7411j7T5?p=1
+
+- 我的代码：https://github.com/K-Artisan/webpack-in-action-note
 
 ## 环境参数
 + Node.js 10+
@@ -225,18 +227,40 @@ cnpm install webpack webpack-cli -D
 
 + build
 + src和 src/index.js
++ src\index.html
 
 至此，项目结构如下：
 
 ```xml
 /P04.Webpack初体验
     ├── build                               
-    ├── src    
+    ├── src  
+        ├── index.html
         ├── index.js  
     ├── node_module 
     ├── package.json
 ```
+## 首页index.html
 
+创建首页文件`build/index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- 引入打包后的资源 -->
+    <script src="./built.js"></script>
+</body>
+
+</html>
+```
 
 
 ## 入口文件
@@ -412,40 +436,16 @@ Entrypoint main = built.js
 !function(e){var t={};function n(r){if(t[r])return t[r].exports;var o=t[r]={i:r,l:!1,exports:{}};return e[r].call(o.exports,o,o.exports,n),o.l=!0,o.exports}n.m=e,n.c=t,n.d=function(e,t,r){n.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:r})},n.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},n.t=function(e,t){if(1&t&&(e=n(e)),8&t)return e;if(4&t&&"object"==typeof e&&e&&e.__esModule)return e;var r=Object.create(null);if(n.r(r),Object.defineProperty(r,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var o in e)n.d(r,o,function(t){return e[t]}.bind(null,o));return r},n.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return n.d(t,"a",t),t},n.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},n.p="",n(n.s=0)}([function(e,t){console.log(1+2)}]);
 ```
 
-### 结论
-
-1. 生产环境生产的代码进行了优化压缩
-2. 生成环境和开发环境将ES6模块化编译成浏览器能识别的模块化
-
-
-
-## 首页index.html
-
-创建首页文件`build/index.html`
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
-<body>
-    <!-- 引入打包后的资源 -->
-    <script src="./built.js"></script>
-</body>
-
-</html>
-```
-
 在浏览器中运行，在控制台查看输出：
 
 ```xml
 3
 ```
+
+### 结论
+
+1. 生产环境生产的代码进行了优化压缩
+2. 生成环境和开发环境将ES6模块化编译成浏览器能识别的模块化
 
 ## 验证Json文件的打包
 
@@ -757,7 +757,7 @@ cnpm install less-loader --save-dev
         ...
 ```
 
-     ### 其它文件
+### 其它文件
 
 + index.html
 
