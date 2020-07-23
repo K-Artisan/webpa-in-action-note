@@ -12,7 +12,7 @@ plugin 安装，已入，使用
 const {
     resolve
 } = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
 
 module.exports = {
     //入口起点

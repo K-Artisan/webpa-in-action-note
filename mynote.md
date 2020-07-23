@@ -796,11 +796,259 @@ Entrypoint main = built.js
 
 
 
+## P6 打包html资源
+
+```htm
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webpack</title>
+</head>
+
+<body>
+    <h1 id="title">标题-打包html</h1>
+    <!-- 注意-这里没有引入js文件，html-webpack-plugin插件会自动已入打包输出的所有资源 -->
+</body>
+
+</html>
+```
+
+```js
+function add(x, y) {
+   return x + y;
+}
+
+console.log(add(1, 2))
+```
+
++ 安装 html-webpack-plugin
+
+```xml
+cnpm install html-webpack-plugin --save-dev
+```
+
++ 添加webpack.config.js的插件配置
+
+```json
+/*
+文件名：webpack.config.js:webpack配置文件
+作  用：指示webpackg干什么活，当运行webpack指令时，会加载里面的配置
+
+所以的构建工具都是基于node.js 平台运行的，模块化默认采用commonJs
+
+loader 安装，使用
+plugin 安装，已入，使用
+
+*/
+
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+
+module.exports = {
+    //入口起点
+    entry: './src/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: []
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        })
+    ],
+    //模式
+    mode: "development"
+    //mode:"production"
+
+}
+```
+
+运行` webpack`命令进行打包
+
++ index.html自动引用打包文件
+
+```html
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        })
+```
 
 
 
+## P7 打包图片资源
+
+## 安装 loader
+
+### url-loader
+
+```xml
+ cnpm install url-loader file-loader --save-dev
+```
+
+不能处理 html 中文件中引用的图片，需要额外引用 `html-loader`
+
+### html-loader
+
+```xml
+ cnpm install html-loader --save-dev
+```
 
 
 
+## index.html
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webpack</title>
+</head>
+
+<body>
+    <h1 id="title">标题-打包图片</h1>
+    <div id="box1"></div>
+    <div id="box2"></div>
+    <img src="./image/logo-vue.png" />
+    <img src="./image/vue.jpg" />
+
+</body>
+
+</html>
+```
+
+## index.less
+
+```css
+#box1 {
+    width: 100px;
+    height: 100px;
+    background-image: url('./image/logo-vue.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+#box2 {
+    width: 200px;
+    height: 300px;
+    background-image: url('./image/vue.jpg');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+```
+
+## webpack.config.js
+
+```json
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+
+module.exports = {
+    //入口起点
+    entry: './src/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+            // 处理less文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.less$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    'style-loader',
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader',
+                    //将less文件编译成css文件
+                    //需要下载less和less-loader
+                    'less-loader'
+                ]
+            },
+            // 处理图片文件
+            {
+                test: /\.(jpg|png|gif)$/,
+                //多个loader，使用use:数组，只有一个loader，使用loader:
+                loader: 'url-loader', //需要下载url-loader, file-loader
+                options: {
+                    //当图片小于8kb，就会被base64处理，
+                    //优点-减少请求次数，
+                    //确定-图片体积变大，影响页面加载时间
+                    limit: 8 * 1024
+                }
+            },
+            {
+                test: /\.html$/,
+                //处理HTML中的img图片，负责引入img,从而被url-loader处理
+                loader: 'html-loader'
+            }
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        })
+    ],
+    //模式
+    mode: "development"
+    //mode:"production"
+
+}
+```
+
+## 打包
+
+运行命令
+
+```xml
+webpack
+```
+
+打包结果
+
+- index.html
+
+```html
+...
+<body>
+    <h1 id="title">标题-打包图片</h1>
+    <div id="box1"></div>
+    <div id="box2"></div>
+    <img src="data:image/png;base64,iVBORw........ToL+DiQAAAABJRU5ErkJggg==" />
+    <img src="fbadfdd0dbc8211228d195a9b64a4c80.jpg" />
+
+<script src="built.js"></script></body>
+...
+```
 
