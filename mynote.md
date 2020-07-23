@@ -175,7 +175,7 @@ https://www.webpackjs.com/concepts/
 | development | 会将process.NODE_ENV的值设置为development,启用NamedChunksPlugin和NamedModulesPlugin | 能让代码本地调试运行的环境 |
 | production  | 会将process.NODE_ENV设置为production,启用ModuleConcatenation，NoEmitOnErrorsPlugin等 | 能让代码优化上线运行的环境 |
 
-# P4 Webpack初体验
+# P4. Webpack初体验
 
 ## 创建项目
 
@@ -796,7 +796,7 @@ Entrypoint main = built.js
 
 
 
-## P6 打包html资源
+# P6. 打包html资源
 
 ```htm
 <!DOCTYPE html>
@@ -892,7 +892,7 @@ module.exports = {
 
 
 
-## P7 打包图片资源
+# P7. 打包图片资源
 
 ## 安装 loader
 
@@ -916,7 +916,7 @@ module.exports = {
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html  lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -934,6 +934,12 @@ module.exports = {
 </body>
 
 </html>
+```
+
+## index.js
+
+```js
+import './index.less';
 ```
 
 ## index.less
@@ -1052,3 +1058,167 @@ webpack
 ...
 ```
 
+# P8. 打包其它资源
+
+## index.html
+
+```htm
+<body>
+    <h1 id="title">标题-打包其它文件-字体、</h1>
+    <span class="iconfont icon-aixin">成功</span>
+    <span class="iconfont icon-chenggong">爱心</span>
+    <span class="iconfont icon-dianyingpiao">电影票</span>
+    <span class="iconfont icon-fenxiang">分享</span>
+    <script src="built.js"></script>
+</body>
+```
+
+## index.js
+
+```js
+import './icons/iconfont.css';
+```
+
+## webpack.config.js
+
+打包其它资源
+
+```json
+            //打包其它资源，
+            {
+                exclude: /\.(css|js|html|jpg|png|gif)$/,
+                loader: 'file-loader'
+            }
+```
+
+完整配置
+
+```js
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+
+module.exports = {
+    //入口起点
+    entry: './src/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+            // 处理css文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.css$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    'style-loader',
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader'
+                ]
+            },
+            // 处理less文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.less$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    'style-loader',
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader',
+                    //将less文件编译成css文件
+                    //需要下载less和less-loader
+                    'less-loader'
+                ]
+            },
+            // 处理图片文件
+            {
+                test: /\.(jpg|png|gif)$/,
+                //多个loader，使用use:数组，只有一个loader，使用loader:
+                loader: 'url-loader', //需要下载url-loader, file-loader
+                options: {
+                    //当图片小于8kb，就会被base64处理，
+                    //优点-减少请求次数，
+                    //确定-图片体积变大，影响页面加载时间
+                    limit: 8 * 1024
+                }
+            },
+            {
+                test: /\.html$/,
+                //处理HTML中的img图片，负责引入img,从而被url-loader处理
+                loader: 'html-loader'
+            },
+            //打包其它资源，
+            {
+                exclude: /\.(css|less|js|html|jpg|png|gif)$/,
+                loader: 'file-loader'
+            }
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        })
+    ],
+    //模式
+    mode: "development"
+    //mode:"production"
+
+}
+```
+
+# P9.devServer
+
+  开发服务器,用来自动化（自动编译、自动打开、刷新刘浏览器）
+
+  特点:只会在内存中存在编译，不会有任何输出
+
+  启动devServer的指令:npx webpack-dev-server
+
+## 安装 devServer
+
+```xml
+cnpm install webpack-dev-server --save-dev
+```
+## webpack.config.js
+
+```json
+    ....
+    //模式
+    mode: "development",
+    //mode:"production"
+
+    /*开发服务器,用来自动化（自动编译、自动打开、刷新刘浏览器）
+    特点:只会在内存中存在编译，不会有任何输出
+    启动devServer的指令:npx webpack-dev-server
+    */
+    devServer: {
+        contentBase: resolve(__dirname, 'build'), //项目构建后路径
+        compress: true, //启用gzip压缩
+        port: 3000, //端口
+        open: true //自动打开浏览器
+    }
+```
+## 运行指令
+
+```xml
+npx webpack-dev-server
+```
+
+运行命令后 自动打开浏览器，修改HTML文件，自动编译和刷新刘浏览器，
+
+
+
+# P10.开发环境配置
