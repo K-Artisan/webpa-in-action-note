@@ -824,13 +824,13 @@ function add(x, y) {
 console.log(add(1, 2))
 ```
 
-+ 安装 html-webpack-plugin
+## 安装 html-webpack-plugin
 
 ```xml
 cnpm install html-webpack-plugin --save-dev
 ```
 
-+ 添加webpack.config.js的插件配置
+## 添加webpack.config.js的插件配置
 
 ```json
 /*
@@ -1222,3 +1222,924 @@ npx webpack-dev-server
 
 
 # P10.开发环境配置
+
+文件归类到相应的文件夹中，
+
+```xml
+/P10.开发环境配置
+    ├── build                               
+    ├── src  
+        ├── index.html
+        ├── js 
+        	├── index.js  
+        ├── css 
+        	├── index.css 
+            ├── iconfont.css 
+        ├── image 
+        	├── vue.png 
+    ├── node_module 
+    ├── package.json
+    ├── webpack.config.js
+```
+
+##   webpack.config.js 的根据文件文字进行调整
+
+```json
+    //入口起点
+    entry: './src/js/index.js',
+    ...
+            // 处理图片文件
+            {
+                loader: 'url-loader', 
+                options: { 
+                    ...
+                    outputPath: 'image'
+                }
+            }
+```
+
+完整配置
+
+```json
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+
+module.exports = {
+    //入口起点
+    entry: './src/js/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'js/built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+            // 处理css文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.css$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    'style-loader',
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader'
+                ]
+            },
+            // 处理less文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.less$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    'style-loader',
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader',
+                    //将less文件编译成css文件
+                    //需要下载less和less-loader
+                    'less-loader'
+                ]
+            },
+            // 处理图片文件
+            {
+                test: /\.(jpg|png|gif)$/,
+                //多个loader，使用use:数组，只有一个loader，使用loader:
+                loader: 'url-loader', //需要下载url-loader, file-loader
+                options: {
+                    //当图片小于8kb，就会被base64处理，
+                    //优点-减少请求次数，
+                    //确定-图片体积变大，影响页面加载时间
+                    limit: 8 * 1024,
+                    outputPath: 'image'
+                }
+            },
+            {
+                test: /\.html$/,
+                //处理HTML中的img图片，负责引入img,从而被url-loader处理
+                loader: 'html-loader'
+            },
+            //打包其它资源，
+            {
+                exclude: /\.(css|less|js|html|jpg|png|gif)$/,
+                loader: 'file-loader'
+            }
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        })
+    ],
+    //模式
+    mode: "development",
+    //mode:"production"
+
+    /*开发服务器,用来自动化（自动编译、自动打开、刷新刘浏览器）
+    特点:只会在内存中存在编译，不会有任何输出
+    启动devServer的指令:npx webpack-dev-server
+    */
+    devServer: {
+        contentBase: resolve(__dirname, 'build'), //项目构建后路径
+        compress: true, //启用gzip压缩
+        port: 3000, //端口
+        open: true //自动打开浏览器
+    }
+}
+```
+
+# P11.构建环境的介绍
+
+# P12.提取CSS成单独文件
+
+## mini-css-extract-plugin
+
+​    该插件提取css文件为单独的文件，
+
+安装
+
+```xml
+cnpm install mini-css-extract-plugin --save-dev
+```
+
+## webpack.config.js
+
+```json
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+const MiniCssExtractPlugin = require('mini-css-extract-plugin') //引入提取css文件插件
+
+module.exports = {
+    //入口起点
+    entry: './src/js/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'js/built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+            // 处理css文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.css$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    //'style-loader',
+                    //这个loader取代style-loader，提取css文件为单独的文件
+                    MiniCssExtractPlugin.loader,
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader'
+                ]
+            }
+
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        }),
+        new MiniCssExtractPlugin({
+            //对输出的css文件进行重名命
+            filename: 'css/buit.css'
+        })
+    ],
+    //模式
+    mode: "development",
+    //mode:"production"
+}
+```
+
+## 打包
+
+最终的打包结果
+
+``` htm
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+...
+    <link href="css/buit.css" rel="stylesheet"></head>
+
+<body>
+    <div id="box1">1</div>
+    <div id="box2">2</div>
+    <script src="js/built.js"></script></body>
+
+</html>
+```
+
+
+
+# P13.CSS兼容性处理
+
+css兼容性处理,安装 postcss-loader 和postcss-preset-env插件
+
+## post-css-loader
+
+```xml
+cnpm install postcss-loader  --save-dev
+```
+
+
+
+## 插件post-preset-env
+
+​         帮postcss找到`package.json`中的`browserslist`中的配置
+
+ 通过配置加载指定的css兼容样式,默认使用生成环境的配置，设置node.js的环境变量,`process.env.NODE_ENV = 'development';`
+
+```xml
+cnpm install postcss-preset-env --save-dev
+```
+
+## package.json
+
+添加`browserslist`配置
+
+```xml
+{
+  "name": "webpack-style-css",
+   ...
+  "browserslist": {
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"],
+    "production": [">0.1%", "not dead", "not op_mini_all"]
+  }
+}
+```
+
+## webpack.config.js
+
+```json
+                    'css-loader',
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            ident: 'postcss',
+                            plugins: [
+                                //postcss插件
+                                require('postcss-preset-env')()
+                            ]
+                        }
+                    }
+```
+
+完整配置
+
+```json
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+const MiniCssExtractPlugin = require('mini-css-extract-plugin') //引入提取css文件插件
+
+//设置node.js的环境变量
+process.env.NODE_ENV = 'development';
+
+module.exports = {
+    //入口起点
+    entry: './src/js/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'js/built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+            // 处理css文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.css$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    //创建style标签，将js中的样式资源插入，添加到head中生效
+                    //'style-loader',
+                    //这个loader取代style-loader，提取css文件为单独的文件
+                    MiniCssExtractPlugin.loader,
+                    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+                    'css-loader',
+                    /*css兼容性处理
+                      1.postcss -> 
+                         postcss-loader 
+                         postcss-preset-env插件
+                      2.帮postcss找到package.json中的browserslist中的配置
+                        ，通过配置加载指定的css兼容样式,默认使用生成环境的配置，设置node.js的环境变量,process.env.NODE_ENV = 'development';
+                    */
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            ident: 'postcss',
+                            plugins: [
+                                //postcss插件
+                                require('postcss-preset-env')()
+                            ]
+                        }
+                    }
+                ]
+            }
+
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        }),
+        new MiniCssExtractPlugin({
+            //对输出的css文件进行重名命
+            filename: 'css/buit.css'
+        })
+    ],
+    //模式
+    mode: "development",
+    //mode:"production"
+}
+```
+
+## 开发环境
+
+`process.env.NODE_ENV = 'development';`
+
+css 被处理为
+
+```css
+#box1 {
+    width: 100%;
+    height: 100%;
+    background-color: aqua;
+    display: flex;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+```
+
+## 生成环境
+
+```xml
+#box1 {
+    width: 100%;
+    height: 100%;
+    background-color: aqua;
+    display: -webkit-box;
+    display: flex;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+}
+```
+
+
+
+# P14.压缩CSS
+
+# 插件 optimize-css-assets-webpack-plugin
+
+## 安装
+
+```xml
+cnpm install optimize-css-assets-webpack-plugin --save-dev
+```
+
+## webpack.config.js
+
+```json
+    plugins: [
+        ...
+        new optimizeCssAssetsWebpackPlugin()
+    ],
+```
+
+
+
+# P15.JS语法检查eslint
+
+##  eslint-loader
+
+```xml
+cnpm install eslint eslint-loader --save-dev
+```
+
+## 检查规则-airbnb
+
+设置检测规则`package.json`中`eslintConfig`中设置
+
++ 需要安装eslint-config-airbnb、 eslint-plugin-import、 eslint
+
+```xml
+cnpm install eslint-config-airbnb eslint-plugin-import --save-dev
+```
+
++ `package.json`配置
+
+```jso
+  "eslintConfig": {
+    "extends": "airbnb-base"
+  }
+```
+
+## webpack.config.js
+
+```json
+   //Loader的配置
+    module: {
+        rules: [
+            ...
+            /*eslint 语法检查
+             */
+            {
+                test: /\.js$/,
+                exclude: /node_modules/, //只检查自己的代码，第三方库不检查
+                loader: 'eslint-loader',
+                options: {
+                    /**设置检测规则
+                     * package.json中eslintConfig中设置
+                     * airbnb-->需要安装eslint-config-airbnb  eslint-plugin-import eslint
+                     * 
+                     */
+                    fix: true //自动修复
+                }
+            }
+```
+
+# P16.JS兼容性处理eslint
+
+## babel-loader
+
+js兼容性处理:babel-loader @babel/preset-env
+
+```xml
+cnpm install babel-loader  @babel/core @babel/preset-env --save-dev 
+```
+
+## @babel/preset-env 
+
+只能转换基本的语法
+
++ index.js
+
+```js
+const add = (x, y) => x + y;
+
+console.log(add(1, 2));
+alert(add(1, 2))
+```
+
+## @babel/polyfill
+
+@babel/poyfill 检查全部兼容性,
+
+安装
+
+```xml
+cnpm install @babel/polyfill --save-dev 
+```
+
++ index.js
+
+需要引入`import '@babel/polyfill';`
+
+```js
+import '@babel/polyfill';
+
+const add = (x, y) => x + y;
+console.log(add(1, 2));
+
+const promise = new Promise(resolve => {
+  setTimeout(() => {
+    console.log('定时器执行完成');
+    resolve();
+  }, 1000)
+})
+
+console.log(promise);
+```
+
+ + webpack.config.js
+
+```json
+            /*js兼容性处理:babel-loader @babel/core @babel/preset-env
+             */
+            {
+                test: /\.js$/,
+                exclude: /node_modules/, //只检查自己的代码，第三方库不检查
+                loader: 'babel-loader',
+                options: {
+                    //预设,只是babel-loader做怎样的兼容性处理
+                    presets: ['@babel/preset-env']
+                }
+            }
+```
+
+
+
+ + 出现的问题
+
+js文件变大，原文件才4kb，编译后479kb
+
+```xm
+Version: webpack 4.43.0
+Time: 3557ms
+Built at: 2020-07-24 17:14:42
+      Asset       Size  Chunks             Chunk Names
+js/built.js    479 KiB    main  [emitted]  main
+
+```
+
+  需求只是为 解决部分问题，但将所有兼容性代码全部已入，体积太大了
+
+## 按需兼容 core-js
+
+按需兼容，
+
+### 安装
+
+```xml
+cnpm install core-js --save-dev
+```
+
+### webpack.config.js
+
+```json
+...
+ //Loader的配置
+    module: {
+        rules: [
+            /*js兼容性处理:babel-loader @babel/core @babel/preset-env
+             */
+            {
+                test: /\.js$/,
+                exclude: /node_modules/, //只检查自己的代码，第三方库不检查
+                loader: 'babel-loader',
+                options: {
+                    //预设,只是babel-loader做怎样的兼容性处理
+                    presets: [
+                        [
+                            '@babel/preset-env',
+                            {
+                                useBuiltIns: 'usage', //按需加载
+                                corejs: { //指定core-js版本
+                                    version: 3
+                                },
+                                targets: { //指定兼容的浏览器版本
+                                    chrome: '60',
+                                    firefox: '60',
+                                    ie: '9',
+                                    safari: '10',
+                                    edge: '17',
+                                }
+                            }
+                        ]
+                    ]
+                }
+            }
+        ]
+    }
+```
+
+
+
+###  index.js
+
+不使用`babel/polyfill`，将其相关代码注释
+
+```js
+//import '@babel/polyfill';
+
+const add = (x, y) => x + y;
+console.log(add(1, 2));
+
+const promise = new Promise(resolve => {
+  setTimeout(() => {
+    console.log('定时器执行完成');
+    resolve();
+  }, 1000)
+})
+
+console.log(promise);
+```
+
+编译结果
+
+```xml
+Version: webpack 4.43.0
+Time: 2774ms
+Built at: 2020-07-24 18:16:32
+      Asset       Size  Chunks             Chunk Names
+js/built.js    112 KiB    main  [emitted]  main
+```
+
+
+
+# P17.压缩hmtl和js
+
+生产环境下
+
++ `webpackage`自动压缩js文件
++ html压缩使用`html-webpack-plugin`
+
+##  html-webpack-plugin
+
+html压缩使用`html-webpack-plugin`
+
+安装配置，见到  **P06.打包html资源** 
+
+## webpack.config.js
+
++ 修改成生产环境
+
+```xml
+mode: "production"
+```
+
++ 添加配置
+
+```xml
+           'minify': {
+                collapseWhitespace: true, //移除空格
+                removeComments: true, //移除注释
+            }
+```
+
+实测，` "html-webpack-plugin": "^4.3.0",`自动移除空格和移除注释，不用添加上述配置
+
++ 完整配置
+
+```json
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+
+module.exports = {
+    //入口起点
+    entry: './src/js/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'js/built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html',
+            'minify': {
+                collapseWhitespace: true, //移除空格
+                removeComments: true, //移除注释
+            }
+
+        })
+    ],
+    //模式
+    mode: "production" //生产环境下会自动压缩js代码
+    //mode:"production" 
+}
+```
+
+
+
+# P18.生产环境配置
+
+## package.json
+
+```json
+{
+  "name": "webpack-style-css",
+  "version": "1.0.0",
+  "description": "webpack-html",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^3.6.0",
+    "eslint": "^7.5.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-loader": "^4.0.2",
+    "eslint-plugin-import": "^2.22.0",
+    "html-loader": "^1.1.0",
+    "html-webpack-plugin": "^4.3.0",
+    "mini-css-extract-plugin": "^0.9.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.3",
+    "postcss-loader": "^3.0.0",
+    "postcss-preset-env": "^6.7.0",
+    "style-loader": "^1.2.1",
+    "url-loader": "^4.1.0",
+    "file-loader": "^6.0.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+
+  },
+  "browserslist": {
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ],
+    "production": [">0.1%", "not dead"]
+  },
+  "eslintConfig": {
+    "extends": "airbnb-base"
+  }
+}
+```
+
+## webpack.config.js
+
+```json
+const {
+    resolve
+} = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin') //引入打包htm插件
+const MiniCssExtractPlugin = require('mini-css-extract-plugin') //引入提取css文件插件
+const optimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin') //引入压缩css文件插件
+
+//设置node.js的环境变量,决定使用 package.json 中的 browserslist 的哪个环境
+process.env.NODE_ENV = 'production';
+
+//复用loader
+const commonCssloader = [
+    //创建style标签，将js中的样式资源插入，添加到head中生效
+    //'style-loader',
+    //这个loader取代style-loader，提取css文件为单独的文件
+    MiniCssExtractPlugin.loader,
+    //将css文件变成commonJs模块加载到js中，里面的内容是样式字符串
+    'css-loader',
+    /*css兼容性处理
+      1.postcss -> 
+         postcss-loader 
+         postcss-preset-env插件
+      2.帮postcss找到package.json中的browserslist中的配置
+        ，通过配置加载指定的css兼容样式,默认使用生成环境的配置，设置node.js的环境变量,process.env.NODE_ENV = 'development';
+    */
+    {
+        loader: 'postcss-loader',
+        options: {
+            ident: 'postcss',
+            plugins: [
+                //postcss插件
+                require('postcss-preset-env')()
+            ]
+        }
+    }
+];
+
+module.exports = {
+    //入口起点
+    entry: './src/js/index.js',
+    //输出
+    output: {
+        //输出文件名
+        filename: 'js/built.js',
+        //输出路径
+        //__dirname:nodejs的全局变量，表示当前文件所在目录的绝对路径
+        path: resolve(__dirname, 'build')
+    },
+    //Loader的配置
+    module: {
+        rules: [
+            // 处理css文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.css$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [...commonCssloader]
+            },
+            // 处理less文件
+            {
+                //匹配那些文件，这里使用正则表达式进行匹配
+                test: /\.less$/,
+                //使用哪里具体的loader，执行顺序是从下往上
+                use: [
+                    ...commonCssloader,
+                    //将less文件编译成css文件
+                    //需要下载less和less-loader
+                    'less-loader'
+                ]
+            },
+            /*eslint js语法检查:
+               eslint-loader
+             */
+            {
+                test: /\.js$/,
+                exclude: /node_modules/, //只检查自己的代码，第三方库不检查
+                loader: 'eslint-loader',
+                enforce: 'pre', //多个loader处理同一个文件，优先执行
+                options: {
+                    /**设置检测规则
+                     * package.json中eslintConfig中设置
+                     * airbnb-->需要安装eslint-config-airbnb  eslint-plugin-import eslint
+                     * 
+                     */
+                    fix: true //自动修复
+                }
+            },
+            /*js兼容性处理:
+               babel-loader @babel/core @babel/preset-env
+             */
+            {
+                test: /\.js$/,
+                exclude: /node_modules/, //只检查自己的代码，第三方库不检查
+                loader: 'babel-loader',
+                options: {
+                    //预设,只是babel-loader做怎样的兼容性处理
+                    presets: [
+                        [
+                            '@babel/preset-env',
+                            {
+                                useBuiltIns: 'usage', //按需加载
+                                corejs: { //指定core-js版本
+                                    version: 3
+                                },
+                                targets: { //指定兼容的浏览器版本
+                                    chrome: '60',
+                                    firefox: '60',
+                                    ie: '9',
+                                    safari: '10',
+                                    edge: '17',
+                                }
+                            }
+                        ]
+                    ]
+                }
+            },
+            // 处理图片文件
+            {
+                test: /\.(jpg|png|gif)$/,
+                //多个loader，使用use:数组，只有一个loader，使用loader:
+                loader: 'url-loader', //需要下载url-loader, file-loader
+                options: {
+                    //当图片小于8kb，就会被base64处理，
+                    //优点-减少请求次数，
+                    //确定-图片体积变大，影响页面加载时间
+                    limit: 8 * 1024
+                }
+            },
+            //处理html中img的图片
+            {
+                test: /\.html$/,
+                //处理HTML中的img图片，负责引入img,从而被url-loader处理
+                loader: 'html-loader'
+            },
+            //打包其它资源，
+            {
+                exclude: /\.(css|less|js|html|jpg|png|gif)$/,
+                loader: 'file-loader'
+            }
+        ]
+    },
+    // plugins的配置
+    plugins: [
+        //html-webpack-plugin:
+        //默认 创建一个空的html,并且自动已入打包输出的所有资源
+        new HtmlWebpackPlugin({
+            'template': './src/index.html'
+        }),
+        new MiniCssExtractPlugin({
+            //对输出的css文件进行重名命
+            filename: 'css/buit.css'
+        }),
+        new optimizeCssAssetsWebpackPlugin()
+    ],
+    //模式
+    mode: "production"
+}
+```
+
